@@ -52,6 +52,8 @@ int mid(int *A, int *B, int first1, int last1, int first2, int last2)
 		last2 = (last2 +first2 + 1) / 2 ;
 		first1 = (last1 + first1 + 1) / 2 ;
 		mid(A, B, first1, last1, first2, last2);
-	}
+        }
+	//you ask me that why I use unix, because it's so cool and very convenient
+
 
 }
