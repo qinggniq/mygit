@@ -1,4 +1,9 @@
 £»merporormb
+<<<<<<< HEAD
 ldfblfdblkdfdvdfmv
 
 fdvmd
+=======
+ldfblfdblkdknvfdlknvd
+lkbd
+>>>>>>> new
