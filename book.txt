@@ -1,2 +1,4 @@
 diff
 int this line
+
+in feature B
