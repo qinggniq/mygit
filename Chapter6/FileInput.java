@@ -31,16 +31,16 @@ public class FileInput {
 		try{
 			is = new FileInputStream(file);
 			int tmpByte = '\0';
-			FileOutputStream fos = new FileOutputStream(new File("/home/wc/OJ/test.txt"));
+			//FileOutputStream fos = new FileOutputStream(new File(path));
 			while ((tmpByte = is.read()) != -1) {
 				this.dic.put((byte) tmpByte, this.dic.get((byte)tmpByte) == null ? 1:this.dic.get((byte)tmpByte)+1);
-				fos.write(tmpByte);
+				//fos.write(tmpByte);
 			}
 			is.close();
-			fos.close();
+			//fos.close();
 
 		}catch(IOException e){
-			e.printStackTrace();
+			System.out.println("文件打开失败！");
 			return false;
 		}
 		return true;

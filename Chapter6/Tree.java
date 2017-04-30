@@ -52,6 +52,8 @@ class HfTree extends Tree{
 	public void buildTree(String path) {
 		fileInput = new FileInput(path);
 		Map<Byte,Long> frequeDic = fileInput.getDic();
+		if(frequeDic == null)
+			return;
 		buildTree(frequeDic);
 	}
 	public void buildTree(Map<Byte, Long> frequeDic) {
@@ -110,7 +112,7 @@ class HfTree extends Tree{
 	public void getAllNode(Node root ) {
 		if(root == null)
 			return;
-		if(root.getbyteCode()!='\0')
+		if(root.isLeave()	)
 			System.out.println(root.getbyteCode() + ":" +root.getWeight());
 		getAllNode(root.leftNode);
 		getAllNode(root.rightNode);

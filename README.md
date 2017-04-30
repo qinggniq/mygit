@@ -1,2 +1,8 @@
-# gitskills
-git i was familar with you gradually
+fads
+f
+sdafsdaf
+sadg
+df
+g
+h
+`
