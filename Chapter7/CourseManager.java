@@ -1,5 +1,7 @@
 package com.qinggniq.homework.Course;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,18 +22,21 @@ public class CourseManager {
 	int totalSemester = 0;
 	int peerSemMaxCourseNum = 0;
 	int curCourseNum = 0;
-	int maxScore = 0;
+	int peerSemMaxSore = 0;
 	
-	public CourseManager(int coursNum,int maxScore) {
+	//通过每学期最大分数，最大学分初始化
+	public CourseManager(int peerSemMaxCourseNum,int totalSemester) {
 		this.courseTable = new ArrayList<Course>();
-		this.peerSemMaxCourseNum = coursNum;
-		this.maxScore = maxScore;
+		this.peerSemMaxCourseNum = peerSemMaxCourseNum;
+		this.totalSemester = totalSemester;
 		this.curCourseNum = 0;
 	}
+	//添加课程
 	public void addCourse(Course c) {
 		this.courseTable.add(c);
 		this.curCourseNum++;
 	}
+	//得到课程ID和位置的映射关系
 	public Map<String, Integer> getCourseMark() {
 		Map<String, Integer> result = new HashMap<String, Integer>();
 		for(int i=0;i < courseTable.size(); i++){
@@ -39,13 +44,14 @@ public class CourseManager {
 		}
 		return result;
 	}
+	//根据课程的先修关系同过临界链表建图
 	public ArrayList<ArrayList<Node>> buildCourseGraph() {
 		ArrayList<ArrayList<Node>> result =new ArrayList<ArrayList<Node>>();
 		Map<String, Integer> courseMarkMap = this.getCourseMark();
-		
+		System.out.println(courseMarkMap);
 		for(int i=0;i < courseTable.size(); i++) {
 			result.add(new ArrayList<Node>());
-			result.get(i).add(new Node(i));
+			result.get(i).add(new Node(i,this.courseTable.get(i).preCourseIdTable.size()));
 		}
 		for(int i=0;i < courseTable.size();i++) {
 			System.out.println(i + ":");
@@ -55,14 +61,17 @@ public class CourseManager {
 				System.out.println("---" + preCourse);
 			}
 		}
+		System.out.println(result);
 		return result;
 	}
+	//打印课程表
 	public void showCourse() {
 		for(int i=0;i < this.courseTable.size(); i++) {
-			
+			//打印课程信息
 			System.out.println("***" + this.courseTable.get(i).preCourseIdTable);
 		}
 	}
+	//打印临界链表
 	public void showGraph() {
 		ArrayList<ArrayList<Node>> result = this.buildCourseGraph();		
 		for(int i=0;i < result.size(); i++) {
@@ -72,6 +81,131 @@ public class CourseManager {
 			System.out.println();
 		}
 	}
+	//得到课程的拓扑排序数组
+	private int[] getCourseSortByorder(){
+		int[] result = new int[this.courseTable.size()];
+		Graph graph = new Graph(this.buildCourseGraph());
+		if(graph.getTopoSort(result)){
+			return result;
+		}else{
+			return null;
+		}
+	}
+	//得到课程编号的拓扑排序数组
+	public String[] getCourseSortById(){
+		String[] result = new String[this.courseTable.size()];
+		int[] topSort = this.getCourseSortByorder();
+		for(int i=0;i<this.courseTable.size();i++) {
+			result[i] = this.courseTable.get(topSort[i]).courseId;
+		}
+		return result;
+	}
+	//均匀完成课程
+	private Course[][] getBestDistrubtionByGeneTask(){
+		if(curCourseNum > totalSemester*peerSemMaxCourseNum){
+			return null;
+		}
+	
+		int[] topSort = this.getCourseSortByorder();
+		if(topSort == null){
+			return null;
+		}
+		Course[][] result = new Course[this.totalSemester][];
+		int peerCourseNum = this.curCourseNum/this.totalSemester;
+		int leftCourse = this.curCourseNum%this.totalSemester;
+		System.out.println(topSort.length);
+		int cnt = 0;
+		for(int i=0;i < this.totalSemester; i++) {
+			int inc = 0;
+			if(leftCourse-- > 0){
+				result[i] = new Course[peerCourseNum + 1];
+				inc = 1;
+			}else{
+				result[i] = new Course[peerCourseNum];
+				inc = 0;
+			}
+			for(int j=0;j < peerCourseNum+inc;j++,cnt++){
+				result[i][j] = this.courseTable.get(topSort[cnt]);
+				System.out.println("---"+result[i][j].courseId+"---");
+			}
+		}
+		
+		return result;
+	}
+	//最快完成课程
+	//最快完成课程
+	private Course[][] getBestDistrubtionByMinTime() {
+		if(curCourseNum > totalSemester*peerSemMaxCourseNum){
+			return null;
+		}
+		int[] topSort = this.getCourseSortByorder();
+		if(topSort == null){
+			return null;
+		}
+		int leftCourseNum = curCourseNum%peerSemMaxCourseNum ;
+		int inc = curCourseNum%peerSemMaxCourseNum != 0? 1:0; 
+		int semNum = curCourseNum/peerSemMaxCourseNum + inc;
+		
+		Course[][] result = new Course[semNum][];
+		
+		int cnt = 0;
+		for(int i=0;i < semNum-1; ++i) {
+			result[i] = new Course[peerSemMaxCourseNum];
+			for(int j=0;j < peerSemMaxCourseNum; ++j,++cnt) {
+				result[i][j] = this.courseTable.get(topSort[cnt]);
+			}
+		}
+		result[semNum-1] = new Course[leftCourseNum];
+		for(int i=0;i<leftCourseNum;i++,++cnt){
+			result[semNum-1][i] = this.courseTable.get(cnt);
+		}
+		return result;
+	}
+	
+	//显示均匀完成的安排
+	public String showDistributionByGeneTask() {
+		Course[][] resultDis = this.getBestDistrubtionByGeneTask();
+		String saveRes = "";
+		if(resultDis == null){
+			return "无法完成安排，请检查课程中的先修关系是否正确";
+		}else{
+			for(int i=0;i < resultDis.length;++i) {
+				saveRes += "第" +(i+1)+"学期:  ";
+				for(int j=0;j < resultDis[i].length;++j) {
+					if(j == resultDis[i].length -1)
+						saveRes += "[ " + resultDis[i][j].courseId + " : " +resultDis[i][j].courseName+" ]"; 
+					else{
+						saveRes += "[ " + resultDis[i][j].courseId + " : " +resultDis[i][j].courseName + " ] -> ";
+					}
+				}
+				saveRes += "\n";
+			}
+		}
+		return saveRes;
+	}
+	//显示最快完成的安排
+	public String showDistributionByMinTime() {
+		Course[][] resultDis = this.getBestDistrubtionByMinTime();
+		String saveRes = "";
+		if(resultDis == null){
+			return "无法完成安排，请检查课程中的先修关系是否正确";
+		}else{
+			for(int i=0;i < resultDis.length;++i) {
+				saveRes += "第" +(i+1)+"学期:  ";
+				for(int j=0;j < resultDis[i].length;++j) {
+					if(j == resultDis[i].length -1)
+						saveRes += "[ " + resultDis[i][j].courseId + " : " +resultDis[i][j].courseName + " ]" ; 
+					else{
+						saveRes += "[ " + resultDis[i][j].courseId + " : " +resultDis[i][j].courseName + " ] -> ";
+					}
+				}
+				saveRes += "\n";
+			}
+		}
+		return saveRes;
+	}
+	//删除课程
+  	//删除课程（根据课程编号）
 	public boolean deletCourse(String courseId) {
 		boolean result = false;
 		Course curCourse = null;
@@ -88,18 +222,24 @@ public class CourseManager {
 		}
 		return result;
 	}
-	public void changeCourseNum(int courseNum) {
+	//修改每学期课程最大数
+	
+	//改变每学期最大课程数
+	public void changePeerMaxCourseNum(int courseNum) {
 		this.peerSemMaxCourseNum = courseNum;
 	}
-	public void changeMaxScore(int maxScore) {
-		this.maxScore = maxScore;
+	//改变每学期最多学分
+	//修改一学期最大学分
+	public void changepeerSemMaxSore(int peerSemMaxSore) {
+		this.peerSemMaxSore = peerSemMaxSore;
 	}
+	//改变总共学期数
+	//修改最大学期数
 	public void changeTotalSemester(int totalSemester) {
 		this.totalSemester = totalSemester;
 	}
-	public void changemaxScore(int maxScore) {
-		this.maxScore = maxScore;
-	}
+	//修改课程编号
+	//改变课程编号
 	public void changeCourseId(String nowcourseId,String tocourseId) {
 		Course curCourse = null;
 		for(int i=0;i < this.courseTable.size();i++) {
@@ -115,7 +255,8 @@ public class CourseManager {
 			}
 		}
 	}
-	
+	//修改课程名称
+	//改变课程名称
 	public void changeCourseName(String nowcourseName,String tocourseName) {
 		Course curCourse = null;
 		for(int i=0;i < this.courseTable.size();i++) {
@@ -126,7 +267,8 @@ public class CourseManager {
 			}	
 		}
 	}
-	
+	//修改课程学分
+	//改变课程学分
 	public void changeCourseScore(String nowcourseId,int toScore) {
 		Course curCourse = null;
 		for(int i=0;i < this.courseTable.size();i++) {
@@ -137,10 +279,10 @@ public class CourseManager {
 			}	
 		}
 	}
+	//输入课程表
 	
+	//输入课程信息
 	public void inputCourseTable(Scanner sc,String endMark ) {
-		
-		
 		for(;;){
 			String courseId = null;
 			String courseName = null;
@@ -178,9 +320,10 @@ public class CourseManager {
 				preCourseTable.add(curString);
 			}
 			this.courseTable.add(new Course(courseId, courseName, courseStuScore, preCourseTable));
+			this.curCourseNum++;
 		}
 	}
-	
+	//各种功能的选择输入
 	public void input(InputStream is,String endMark) {
 		Scanner sc = new Scanner(is);
 		System.out.println("--------------------------教学计划编制------------------------------------------");
@@ -191,7 +334,7 @@ public class CourseManager {
 		System.out.print("请输入每学期可修最大课程数：");
 		this.peerSemMaxCourseNum = inputMisc(sc);
 		System.out.print("请输入一学期学分上限：");
-		this.maxScore = inputMisc(sc);
+		this.peerSemMaxSore = inputMisc(sc);
 		System.out.println("请逐个输入课程信息(包括编号，名称，学分，先修课程):");
 		this.inputCourseTable(sc, endMark);
 		System.out.println("课程信息输入完毕。");
@@ -225,12 +368,26 @@ public class CourseManager {
 				System.out.println("\t1.课程编号 2.课程名称 3.课程学分 4.最大学期数 \n\t" +
 						"5.一学期学分上限 6.一学期最大课程数");
 				int mod = 0;
-				
+			
+			case 3://导入课程
+				System.out.print("请输入导入课程的文件名称：");
+				String filePath = sc.next();
+				File inCouFile = new File(filePath);
+				try {
+					Scanner fsc = new Scanner(inCouFile);
+					this.inputCourseTable(fsc, endMark);
+					fsc.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					System.out.println("文件打开失败，请检查输入路径是否正确。");
+				}
+				break;
 			default:
 				break;
 			}
 		}
 	}
+	//一些数值的输入错误处理
 	private int inputMisc(Scanner sc) {
 		int result = 0;
 		for(;;) {
@@ -244,13 +401,15 @@ public class CourseManager {
 		}
 		return result;
 	}
-	public static void main(String[] args) {
-		CourseManager cm = new CourseManager(12,30);
-		Scanner sc = new Scanner(System.in);
+	public static void main(String[] args) throws FileNotFoundException {
+		CourseManager cm = new CourseManager(5,7);
+		Scanner sc = new Scanner(new File("/home/wc/HrbeuCourseTable.ct"));
 		cm.inputCourseTable(sc, "!");
 		sc.close();
-		cm.showCourse();
-		cm.showGraph();
-	}
-
+		//cm.showCourse();
+		//cm.showGraph();
+		System.out.print(cm.showDistributionByMinTime());
+	}	
 }
+
+
