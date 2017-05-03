@@ -24,13 +24,13 @@ public class Graph {
 		for(int i=0;i < this.SIZE;i++) {
 			if(graph.get(i).get(0).indegree == 0){
 				zeroNodes.push(graph.get(i).get(0));
-				System.out.println("000--"+graph.get(i).get(0).mark +"--000");
+				//System.out.println("000--"+graph.get(i).get(0).mark +"--000");
 			}
 		}
 		while(!zeroNodes.isEmpty()) {
 			result[curPos++] = zeroNodes.peek().getMark();
 			int curMark = zeroNodes.pop().getMark();
-			System.out.println("*** " + curMark + " ***");
+			//System.out.println("*** " + curMark + " ***");
 			cnt++;
 			for(int i=1 ; i < this.graph.get(curMark).size(); ++i) {
 				
