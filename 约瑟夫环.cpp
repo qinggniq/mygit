@@ -76,19 +76,12 @@ bool process(loop *L,vector<int> &key){
     }
     node *pre=L->tail,*cur=L->head;
     int k = key[0];
-    //node* p=L->head;
-    /* for(;p!=L->tail;p=p->next)
-        cout<<p->order<<"**";
 
-    cout<<L->tail->next->order<<endl;
-    cout<<L->length<<endl;*/
     for(int i=1;L->length;i++){
-        if(!(i%k)){
+        if((i==k)){
             k = key[(cur->order)-1];
             cout<<cur->order;
             pre->next=cur->next;
-
-            //cout<<"*k"<<k<<"**"<<"i:"<<i<<endl;
             i = 0;
             free(cur);
             L->length--;
@@ -98,10 +91,10 @@ bool process(loop *L,vector<int> &key){
             }
             else
                 cout<<endl;
-        }
+        }else{
             cur=cur->next;
-                pre=pre->next;
-
+            pre=pre->next;
+        }
  }
     return true;
 }
@@ -119,8 +112,6 @@ void input(){
             cout<< "select mode:";
             cin>>mode;
             int n;
-
-            //           cout<<mode<<"***"<<endl;
             switch(mode){
             case '1':
                 cout<<"请输入人数:"<<endl;
@@ -148,8 +139,6 @@ void input(){
                         cin>>key[i];
 
                     }
-                    /*       for(int i=0;i<n;i++)
-                             cout<<key[i];*/
                     process(L,key);
                     delete L;
                 }else{
@@ -164,9 +153,10 @@ void input(){
                 break;
             default :
                 cout<<"输入错误,请重新输入."<<endl;
-}
+            }
         }
-    }}
+    }
+}
 int main() {
     //int m,n;
     // loop *L;
